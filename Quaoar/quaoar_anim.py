@@ -241,9 +241,9 @@ H_history = []
 time_history = []
 H_line = None
 
+t = np.linspace(0, ROTATION_PERIOD, 200)
 def lightcurve_preview():
     # Plot a preview of the ellipsoid lightcurve, which is just a cosine wave with semi-amplitude = -H_range/2
-    t = np.linspace(0, ROTATION_PERIOD, 200)
     preview_lightcurve = (-H_range/2)*np.cos(4*np.pi*t/ROTATION_PERIOD)
     ax_H.plot(t, preview_lightcurve, ls='-', lw=1.5, color='gold', alpha=0.25, zorder=-2)
 
