@@ -74,7 +74,7 @@ def apply_view_transform_normals(nx, ny, nz):
 # Create figure with two subplots
 gs = GridSpec(2, 1, height_ratios=[2, 1], hspace=0.3)
 fig = plt.figure(figsize=(6, 8), facecolor="black")
-fig.subplots_adjust(left=0.1, right=0.96, top=0.94, bottom=0.1, hspace=0.42)
+fig.subplots_adjust(left=0.1, right=0.96, top=0.93, bottom=0.1, hspace=0.42)
 ax = fig.add_subplot(gs[0])
 ax_H = fig.add_subplot(gs[1])
 
@@ -119,18 +119,12 @@ def style_H_axis():
     # Apply the black-background, white-text style to the lightcurve axes.
     ax_H.set_facecolor("black")
     ax_H.set_xlabel("Time (hours)", color="white", fontsize=fs_axis)
-    ax_H.set_ylabel("Magnitude", color="white", fontsize=fs_axis)
+    ax_H.set_ylabel("Relative Mag.", color="white", fontsize=fs_axis)
     ax_H.set_title("Rotational Lightcurve\n(Magnitude Over Time)", color="white", fontsize=fs_title)
     ax_H.tick_params(axis="both", colors="white", labelsize=fs_ticks)
     for spine in ax_H.spines.values():
         spine.set_color("white")
-    ax_H.grid(True, color="white", alpha=0.25)
-
-
-def setup_H_axis():
-    ax_H.clear()
-    style_H_axis()
-    ax_H.set_xlim(0, ROTATION_PERIOD)
+    ax_H.grid(True, color="white", ls=':', alpha=0.25, zorder=-9)
 
 def compute_projection_area(angle):
     """Compute the area of the 2D projection of the visible ellipsoid"""
@@ -237,7 +231,7 @@ H_mean = (H_min + H_max) / 2
 
 # Add padding
 H_range = H_max - H_min
-padding = 1.05 * H_range if H_range > 0 else 1.05
+padding = 1.05 * 0.3#H_range if H_range > 0 else 1.05
 
 H_ymin = -padding  # center the plot around y=0
 H_ymax = padding
@@ -246,6 +240,12 @@ H_ymax = padding
 H_history = []
 time_history = []
 H_line = None
+
+def lightcurve_preview():
+    # Plot a preview of the ellipsoid lightcurve, which is just a cosine wave with semi-amplitude = -H_range/2
+    t = np.linspace(0, ROTATION_PERIOD, 200)
+    preview_lightcurve = (-H_range/2)*np.cos(4*np.pi*t/ROTATION_PERIOD)
+    ax_H.plot(t, preview_lightcurve, ls='-', lw=1.5, color='gold', alpha=0.25, zorder=-2)
 
 def init():
     global contour, mesh_lines, H_history, time_history, H_line
@@ -264,6 +264,7 @@ def init():
     # Initialize H plot
     ax_H.clear()
     style_H_axis()
+    lightcurve_preview()
     ax_H.set_xlim(0, ROTATION_PERIOD)
     H_line, = ax_H.plot([], [], color="yellow", lw=2)
 
@@ -276,8 +277,6 @@ def init():
     if H_history:
         ax_H.set_ylim(H_ymin, H_ymax)
         ax_H.invert_yaxis()
-
-    ax_H.set_xlim(0, ROTATION_PERIOD)
 
     return contour.collections + mesh_lines + [H_line]
 
