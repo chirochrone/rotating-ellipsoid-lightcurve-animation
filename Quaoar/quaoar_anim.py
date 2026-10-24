@@ -9,8 +9,9 @@ a, b, c = 1241.4/2, 1093.0/2, 1023.0/2
 # Geometric albedo
 albedo = 0.111
 
-# Define color map name (string)
+# Define color map name (string) and opacity of ellipsoid model
 colormap = "copper"
+ellipsoid_opacity = 1   # keep at 1; translucent contourf causes rendering issues :(
 
 # Tilt the viewing perspective
 '''
@@ -74,7 +75,7 @@ def apply_view_transform_normals(nx, ny, nz):
 # Create figure with two subplots
 gs = GridSpec(2, 1, height_ratios=[2, 1], hspace=0.3)
 fig = plt.figure(figsize=(6, 8), facecolor="black")
-fig.subplots_adjust(left=0.1, right=0.96, top=0.93, bottom=0.1, hspace=0.42)
+fig.subplots_adjust(left=0.04, right=0.96, top=0.93, bottom=0.1, hspace=0.42)
 ax = fig.add_subplot(gs[0])
 ax_H = fig.add_subplot(gs[1])
 
@@ -96,7 +97,7 @@ ax.set_ylim(-bordersize, bordersize)
 ax.set_xticks([])
 ax.set_yticks([])
 
-contour = ax.contourf(*apply_view_transform(X, Y, Z), levels=30, cmap=colormap)
+contour = ax.contourf(*apply_view_transform(X, Y, Z), levels=30, cmap=colormap, alpha=ellipsoid_opacity)
 mesh_lines = []
 
 # Match the lower panel's border width to the upper panel's actual width.
@@ -247,6 +248,21 @@ def lightcurve_preview():
     preview_lightcurve = (-H_range/2)*np.cos(4*np.pi*t/ROTATION_PERIOD)
     ax_H.plot(t, preview_lightcurve, ls='-', lw=1.5, color='gold', alpha=0.25, zorder=-2)
 
+    # Add a double-headed arrow to indicate the peak-to-trough amplitude
+    annotation_padding = 1.05   # 0.08 is the distance between the annotation and right border of lightcurve plot
+    ax_H.annotate(
+        "",#f"Δm = {H_range:.2f} mag",   # the text offsets the arrow, abandon this and use a separate text annotation
+        xy=(annotation_padding*ROTATION_PERIOD, 1.1*H_range/2),  # End point (head 1)
+        xytext=(annotation_padding*ROTATION_PERIOD, -1.1*H_range/2),  # Start point (head 2)
+        ha='center',    # Centers text horizontally between xy and xytext
+        va='center',    # Sits text slightly above the arrow line
+        fontsize=fs_ticks,    # Adjust text size independently
+        color='white',
+        arrowprops=dict(arrowstyle="<->", color="white", lw=2, mutation_scale=15),  # default arrowhead mutation scale is 10
+        annotation_clip=False  # prevents clipping outside the axis frame, so the arrow can show
+    )
+    ax_H.text((annotation_padding+0.1)*ROTATION_PERIOD, 0, f"Δm\n{H_range:.2f}", fontsize=fs_ticks, color="white", ha="center", va="center")
+
 def init():
     global contour, mesh_lines, H_history, time_history, H_line
     H_history = []
@@ -258,7 +274,7 @@ def init():
                 coll.remove()
             except:
                 pass
-    contour = ax.contourf(*apply_view_transform(X, Y, Z), levels=60, cmap=colormap)
+    contour = ax.contourf(*apply_view_transform(X, Y, Z), levels=60, cmap=colormap, alpha=ellipsoid_opacity)
     mesh_lines = draw_mesh(0.0)
     
     # Initialize H plot
@@ -300,7 +316,7 @@ def update(frame):
     mesh_lines = []
 
     x_rot, y_rot, z_rot = rotate_points(X, Y, Z, angle)
-    contour = ax.contourf(*apply_view_transform(x_rot, y_rot, z_rot), levels=30, cmap=colormap)
+    contour = ax.contourf(*apply_view_transform(x_rot, y_rot, z_rot), levels=30, cmap=colormap, alpha=ellipsoid_opacity)
     mesh_lines = draw_mesh(angle)
 
     if cycle_frame == 0 and H_history:
